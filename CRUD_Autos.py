@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 from os import system
 
 class Autos():
@@ -11,6 +12,12 @@ class Autos():
         self.coleccion2 = db['nuevos']
 
     def IngresarAuto(self):
+        system("cls")
+        print("=================================")
+        print("---- Gestión de BD de autos -----")
+        print("=================================")
+        print("-------- Ingreso de auto --------")
+        print("=================================")
         Nombre      = input("Ingrese el nombre del auto .......: ")
         Anio        = int(input("Ingrese el año del auto ..........: "))
         Pais        = input("Ingrese el país del auto .........: ")
@@ -19,7 +26,7 @@ class Autos():
         Cilindros   = int(input("Ingrese los cilindros del motor ..: "))
         Cilindrada  = int(input("Ingrese la cilindrada del motor ..: "))
         Peso        = int(input("Ingrese el peso del auto .........: "))
-        Aceleracion = int(input("Ingrese la aceleración del auto ..: "))
+        Aceleracion = float(input("Ingrese la aceleración del auto ..: "))
         
         auto_data = {
             "Nombre": Nombre,
@@ -41,6 +48,10 @@ class Autos():
             caracteristicas = input("Ingrese las características del auto: ")
             auto_data["caracteristicas"] = caracteristicas
             self.coleccion2.insert_one(auto_data)
+        print("=================================")
+        print("--- ¡Auto agregado con éxito! ---")
+        print("=================================")
+        self.Seguir()
 
     def BuscarAuto(self):
         system("cls")
@@ -92,7 +103,113 @@ class Autos():
             if self.tipoAuto == 2:
                 print("Características del auto ..: ", auto['caracteristicas'])
             print("/////////////////////////////////")
-            self.Seguir()
+        self.Seguir()
+    
+    def UpdateAuto(self):
+        system("cls")
+        print("=================================")
+        print("---- Gestión de BD de autos -----")
+        print("=================================")
+        print("---- Actualizar auto de la BD ---")
+        print("=================================")
+        id_auto = input("Ingrese el ID del auto a actualizar: ")
+        print("/////////////////////////////////")
+        
+        try:
+            object_id = ObjectId(id_auto)
+        except Exception as e:
+            print("El ID ingresado no es válido.", e)
+
+        print("Ingrese los nuevos valores para el auto")
+        nombre      = input("Nombre del auto ..........: ")
+        anio        = input("Año del auto .............: ")
+        pais        = input("País del auto ............: ")
+        kilometraje = input("Kilometraje del auto .....: ")
+        cilindros   = input("Cilindros del motor ......: ")
+        cilindrada  = input("Cilindrada del motor .....: ")
+        hp          = input("HP del motor .............: ")
+        peso        = input("Peso del auto ............: ")
+        aceleracion = input("Aceleración del auto .....: ")
+        if self.tipoAuto == 2:
+            caracteristicas = input("Características del auto .: ")
+
+        update_fields = {}
+        
+        if nombre:
+            update_fields["Nombre"] = nombre
+        if anio:
+            update_fields["Anio"] = int(anio)
+        if pais:
+            update_fields["Pais"] = pais
+        if kilometraje:
+            update_fields["Kilometraje"] = int(kilometraje)
+        if peso:
+            update_fields["Peso"] = int(peso)
+        if aceleracion:
+            update_fields["Aceleracion"] = float(aceleracion)
+        if cilindros or cilindrada or hp:
+            update_fields["Motor"] = {}
+            if cilindros:
+                update_fields["Motor"]["Cilindros"] = int(cilindros)
+            if cilindrada:
+                update_fields["Motor"]["Cilindrada"] = int(cilindrada)
+            if hp:
+                update_fields["Motor"]["HP"] = int(hp)
+        if self.tipoAuto == 2 and caracteristicas:
+            update_fields["caracteristicas"] = caracteristicas
+
+        if self.tipoAuto == 1:
+            resultado = self.coleccion.update_one({"_id": object_id}, {"$set": update_fields})
+        elif self.tipoAuto == 2:
+            resultado = self.coleccion2.update_one({"_id": object_id}, {"$set": update_fields})
+        else:
+            self.UpdateAuto()
+
+        if resultado.matched_count > 0:
+            if resultado.modified_count > 0:
+                print("=================================")
+                print("-- Auto actualizado con éxito ---")
+                print("=================================")
+            else:
+                print("=================================")
+                print("--- No se realizaron cambios ----")
+                print("=================================")
+        else:
+            print("=================================")
+            print("---- No se encontró el auto -----")
+            print("=================================")
+        self.Seguir()
+
+    def DeleteAuto(self):
+        system("cls")
+        print("=================================")
+        print("---- Gestión de BD de autos -----")
+        print("=================================")
+        print("----- Borrar auto de la BD ------")
+        print("=================================")
+        id_auto = input("Ingrese el ID del auto a eliminar: ")
+        try:
+            object_id = ObjectId(id_auto)
+        except Exception as e:
+            print("El ID ingresado no es válido.", e)
+
+        if self.tipoAuto == 1:
+            resultado = self.coleccion.delete_one({"_id": object_id})
+        elif self.tipoAuto == 2:
+            resultado = self.coleccion2.delete_one({"_id": object_id})
+        else:
+            self.DeleteAuto()
+
+        if resultado.deleted_count > 0:
+            print("=================================")
+            print("---- ¡Auto borrado con éxito! ---")
+            print("=================================")
+        else:
+            print("=================================")
+            print("---- No se encontró el auto -----")
+            print("=================================")
+        self.Seguir()
+
 
     def MenuP(self):
         system("cls")
@@ -129,8 +246,10 @@ class Autos():
         print("=================================")
         print("1.- Ingresar auto usado")
         print("2.- Buscar auto usado")
+        print("3.- Actualizar auto usado")
+        print("4.- Borrar auto usado")
         print("---------------------------------")
-        print("3.- Volver ")
+        print("5.- Volver ")
         print("=================================")
         resp = int(input("Respuesta: "))
         
@@ -139,6 +258,10 @@ class Autos():
         elif resp == 2:
             self.BuscarAuto()
         elif resp == 3:
+            self.UpdateAuto()
+        elif resp == 4:
+            self.DeleteAuto()
+        elif resp == 5:
             self.MenuP()
         else:
             print("Ingrese un número válido")
@@ -153,8 +276,10 @@ class Autos():
         print("=================================")
         print("1.- Ingresar auto nuevo")
         print("2.- Buscar auto nuevo")
+        print("3.- Actualizar auto nuevo")
+        print("4.- Borrar auto nuevo")
         print("---------------------------------")
-        print("3.- Volver ")
+        print("5.- Volver ")
         print("=================================")
         resp = int(input("Respuesta: "))
         
@@ -163,6 +288,10 @@ class Autos():
         elif resp == 2:
             self.BuscarAuto()
         elif resp == 3:
+            self.UpdateAuto()
+        elif resp == 4:
+            self.DeleteAuto()
+        elif resp == 5:
             self.MenuP()
         else:
             print("Ingrese un número válido")
