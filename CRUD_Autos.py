@@ -65,6 +65,9 @@ class Autos():
         print("=================================")
         nombreAuto =     input("Ingrese el nombre completo del auto .: ")
         potenciaHP = int(input("Ingrese la potencia del motor (HP) ..: "))
+        print("Ingrese el número de página en donde")
+        pagina     = int(input("quiere realizar la búsqueda .........: "))
+        paginaOP   = (pagina * 5) -5
         
         pipeline = [
             {"$match": {"Nombre": nombreAuto, "Motor.HP": potenciaHP}},
@@ -80,7 +83,10 @@ class Autos():
                 "Peso": 1,
                 "Aceleracion": 1,
                 "caracteristicas": {"$ifNull": ["$caracteristicas", "N/A"]}
-            }}
+            }},
+            {"$sort":{"Nombre": 1}},
+            {"$skip": paginaOP},
+            {"$limit": 5}
         ]
         
         if self.tipoAuto == 1:
@@ -88,8 +94,13 @@ class Autos():
         elif self.tipoAuto == 2:
             documentos = self.coleccion2.aggregate(pipeline)
 
+        system("cls")
+        print("=================================")
+        print(f"| Usted está en la página N° {pagina} | ")
+        print("=================================")
         print("/////////////////////////////////")
         print("--- Resultados de la busqueda ---")
+        contador = 0
         for auto in documentos:
             print("/////////////////////////////////")
             print("ID del auto ...............: ", auto['_id'])
@@ -103,6 +114,14 @@ class Autos():
             if self.tipoAuto == 2:
                 print("Características del auto ..: ", auto['caracteristicas'])
             print("/////////////////////////////////")
+            contador +=1
+        print("=================================")
+        if contador == 1:
+            print("-- Se ha encontrado 1 registro --")
+        else:
+            print(f"- Se han encontrado {contador} registros -")
+        print("--------- en esta página --------")
+        print("=================================")
         self.Seguir()
     
     def UpdateAuto(self):
